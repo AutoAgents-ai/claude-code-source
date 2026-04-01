@@ -20,6 +20,69 @@ npm install -g @anthropic-ai/claude-code
 
 2. Navigate to your project directory and run `claude`.
 
+## Private Deployment Environment Variables (AutoAgents)
+
+If you are running this fork in private mode with an OpenAI-compatible backend
+(for example Kimi/GLM/Qwen), configure environment variables before launching
+`autoagents`.
+
+### 1) Create a `.env` file
+
+```bash
+# --- Deployment profile ---
+CLAUDE_DEPLOYMENT_PROFILE=private
+
+# --- Optional: disable nonessential network traffic ---
+CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+DISABLE_TELEMETRY=1
+
+# --- OpenAI-compatible endpoint ---
+OPENAI_COMPAT_BASE_URL=https://api.moonshot.cn/v1
+OPENAI_COMPAT_API_KEY=your_api_key_here
+OPENAI_COMPAT_MODEL=kimi-k2.5
+
+# --- Display model in UI (should match OPENAI_COMPAT_MODEL) ---
+ANTHROPIC_MODEL=kimi-k2.5
+```
+
+### 2) Export env vars and run
+
+```bash
+set -a
+source .env
+set +a
+
+autoagents
+```
+
+## Build a Local Binary
+
+You can build a standalone executable with Bun compile:
+
+```bash
+mkdir -p dist
+VERSION="${VERSION:-$(node -p "require('./package.json').version")}"
+BUILD_TIME="${BUILD_TIME:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+
+bun build src/entrypoints/cli.tsx \
+  --compile \
+  --target bun-darwin-arm64 \
+  --outfile dist/autoagents \
+  --tsconfig-override tsconfig.json \
+  --define "MACRO.VERSION='${VERSION}'" \
+  --define "MACRO.PACKAGE_URL='@anthropic-ai/claude-code'" \
+  --define "MACRO.NATIVE_PACKAGE_URL=undefined" \
+  --define "MACRO.BUILD_TIME='${BUILD_TIME}'" \
+  --define "MACRO.VERSION_CHANGELOG=''" \
+  --define "MACRO.FEEDBACK_CHANNEL='https://github.com/anthropics/claude-code/issues'" \
+  --define "MACRO.ISSUES_EXPLAINER='report issues at https://github.com/anthropics/claude-code/issues'" \
+  --define "process.env.USER_TYPE='external'"
+```
+
+Output binary:
+
+- `dist/autoagents` (macOS Apple Silicon target shown above)
+
 ## Reporting Bugs
 
 We welcome your feedback. Use the `/bug` command to report issues directly within Claude Code, or file a [GitHub issue](https://github.com/anthropics/claude-code/issues).
