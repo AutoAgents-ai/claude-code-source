@@ -30,6 +30,7 @@ const KEEPALIVE_MSG = '{"type":"KeepAlive"}'
 const CLOSE_STREAM_MSG = '{"type":"CloseStream"}'
 
 import { getFeatureValue_CACHED_MAY_BE_STALE } from './analytics/growthbook.js'
+import { isRouteEnabled } from 'src/config/gateway.js'
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -112,6 +113,7 @@ export async function connectVoiceStream(
   callbacks: VoiceStreamCallbacks,
   options?: { language?: string; keyterms?: string[] },
 ): Promise<VoiceStreamConnection | null> {
+  if (!isRouteEnabled('voiceStt')) return null
   // Ensure OAuth token is fresh before connecting
   await checkAndRefreshOAuthTokenIfNeeded()
 

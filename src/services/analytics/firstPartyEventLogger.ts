@@ -23,6 +23,7 @@ import type { GrowthBookUserAttributes } from './growthbook.js'
 import { getDynamicConfig_CACHED_MAY_BE_STALE } from './growthbook.js'
 import { getEventMetadata } from './metadata.js'
 import { isSinkKilled } from './sinkKillswitch.js'
+import { isRouteEnabled } from 'src/config/gateway.js'
 
 /**
  * Configuration for sampling individual event types.
@@ -215,8 +216,10 @@ async function logEventTo1PAsync(
  */
 export function logEventTo1P(
   eventName: string,
-  metadata: Record<string, number | boolean | undefined> = {},
+  metadata: Record<string, number | boolean | undefined> = {
+},
 ): void {
+  if (!isRouteEnabled('telemetry')) return
   if (!is1PEventLoggingEnabled()) {
     return
   }

@@ -10,6 +10,7 @@ import type {
   RateLimitTier,
   SubscriptionType,
 } from './types.js'
+import { isRouteEnabled } from 'src/config/gateway.js'
 
 /**
  * OAuth service that handles the OAuth 2.0 authorization code flow with PKCE.
@@ -47,6 +48,7 @@ export class OAuthService {
       skipBrowserOpen?: boolean
     },
   ): Promise<OAuthTokens> {
+    if (!isRouteEnabled('oauth')) throw new Error('OAuth is disabled in current deployment profile')
     // Create OAuth callback listener and start it
     this.authCodeListener = new AuthCodeListener()
     this.port = await this.authCodeListener.start()

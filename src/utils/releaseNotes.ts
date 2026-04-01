@@ -9,6 +9,7 @@ import { toError } from './errors.js'
 import { logError } from './log.js'
 import { isEssentialTrafficOnly } from './privacyLevel.js'
 import { gt } from './semver.js'
+import { isRouteEnabled } from 'src/config/gateway.js'
 
 const MAX_RELEASE_NOTES_SHOWN = 5
 
@@ -80,6 +81,8 @@ export async function migrateChangelogFromConfig(): Promise<void> {
  * This runs in the background and doesn't block the UI
  */
 export async function fetchAndStoreChangelog(): Promise<void> {
+  if (!isRouteEnabled('releaseNotes')) return
+
   // Skip in noninteractive mode
   if (getIsNonInteractiveSession()) {
     return

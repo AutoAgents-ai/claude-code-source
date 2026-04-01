@@ -24,6 +24,7 @@ import {
   is1PEventLoggingEnabled,
   logGrowthBookExperimentTo1P,
 } from './firstPartyEventLogger.js'
+import { isRouteEnabled } from 'src/config/gateway.js'
 
 /**
  * User attributes sent to GrowthBook for targeting.
@@ -621,6 +622,8 @@ const getGrowthBookClient = memoize(
  */
 export const initializeGrowthBook = memoize(
   async (): Promise<GrowthBook | null> => {
+    if (!isRouteEnabled('featureFlags')) return null
+
     let clientWrapper = getGrowthBookClient()
     if (!clientWrapper) {
       return null

@@ -65,6 +65,7 @@ import {
   endInteractionSpan,
   isEnhancedTelemetryEnabled,
 } from './sessionTracing.js'
+import { isRouteEnabled } from 'src/config/gateway.js'
 
 const DEFAULT_METRICS_EXPORT_INTERVAL_MS = 60000
 const DEFAULT_LOGS_EXPORT_INTERVAL_MS = 5000
@@ -419,6 +420,8 @@ async function initializeBetaTracing(
 }
 
 export async function initializeTelemetry() {
+  if (!isRouteEnabled('telemetry')) return
+
   profileCheckpoint('telemetry_init_start')
   bootstrapTelemetry()
 
