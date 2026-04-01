@@ -28,6 +28,8 @@ import {
   getVertexRegionForModel,
   isEnvTruthy,
 } from '../../utils/envUtils.js'
+import { getGatewayConfig } from 'src/config/gateway.js'
+import { createGatewayFetch } from '../adapter/gateway-fetch.js'
 
 /**
  * Environment variables for different client types:
@@ -127,6 +129,25 @@ export async function getAnthropicClient({
   if (additionalProtectionEnabled) {
     defaultHeaders['x-anthropic-additional-protection'] = 'true'
   }
+
+
+  // --- openai-compat: skip Anthropic auth, inject gateway fetch ---
+  if (getAPIProvider() === 'openai-compat') {
+    const gatewayConfig = getGatewayConfig()
+    const gatewayFetchFn = createGatewayFetch(gatewayConfig.model)
+    const resolvedGatewayFetch = buildFetch(gatewayFetchFn, source)
+
+    return new Anthropic({
+      apiKey: 'gateway-placeholder',
+      defaultHeaders,
+      maxRetries,
+      timeout: parseInt(process.env.API_TIMEOUT_MS || String(600 * 1000), 10),
+      dangerouslyAllowBrowser: true,
+      ...(resolvedGatewayFetch && { fetch: resolvedGatewayFetch }),
+      ...(isDebugToStdErr() && { logger: createStderrLogger() }),
+    })
+  }
+
 
   logForDebugging('[API:auth] OAuth token check starting')
   await checkAndRefreshOAuthTokenIfNeeded()
