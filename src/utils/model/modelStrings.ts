@@ -24,6 +24,16 @@ const MODEL_KEYS = Object.keys(ALL_MODEL_CONFIGS) as ModelKey[]
 
 function getBuiltinModelStrings(provider: APIProvider): ModelStrings {
   const out = {} as ModelStrings
+
+  if (provider === 'openai-compat') {
+    const modelName =
+      process.env.OPENAI_COMPAT_MODEL || process.env.ANTHROPIC_MODEL || ''
+    for (const key of MODEL_KEYS) {
+      out[key] = modelName
+    }
+    return out
+  }
+
   for (const key of MODEL_KEYS) {
     out[key] = ALL_MODEL_CONFIGS[key][provider]
   }
@@ -121,9 +131,10 @@ function initModelStrings(): void {
     // Already initialized
     return
   }
-  // Initial with default values for non-Bedrock providers
-  if (getAPIProvider() !== 'bedrock') {
-    setModelStringsState(getBuiltinModelStrings(getAPIProvider()))
+  const provider = getAPIProvider()
+  // openai-compat and non-Bedrock native providers: synchronous init
+  if (provider !== 'bedrock') {
+    setModelStringsState(getBuiltinModelStrings(provider))
     return
   }
   // On Bedrock, update model strings in the background without blocking.
@@ -155,9 +166,10 @@ export async function ensureModelStringsInitialized(): Promise<void> {
     return
   }
 
-  // For non-Bedrock, initialize synchronously
-  if (getAPIProvider() !== 'bedrock') {
-    setModelStringsState(getBuiltinModelStrings(getAPIProvider()))
+  const provider = getAPIProvider()
+  // openai-compat and non-Bedrock: synchronous init
+  if (provider !== 'bedrock') {
+    setModelStringsState(getBuiltinModelStrings(provider))
     return
   }
 

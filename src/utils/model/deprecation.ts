@@ -4,7 +4,7 @@
  * Contains information about deprecated models and their retirement dates.
  */
 
-import { type APIProvider, getAPIProvider } from './providers.js'
+import { type APIProvider, type NativeAPIProvider, getAPIProvider } from './providers.js'
 
 type DeprecatedModelInfo = {
   isDeprecated: true
@@ -22,7 +22,7 @@ type DeprecationEntry = {
   /** Human-readable model name */
   modelName: string
   /** Retirement dates by provider (null = not deprecated for that provider) */
-  retirementDates: Record<APIProvider, string | null>
+  retirementDates: Record<NativeAPIProvider, string | null>
 }
 
 /**
@@ -66,6 +66,11 @@ const DEPRECATED_MODELS: Record<string, DeprecationEntry> = {
 function getDeprecatedModelInfo(modelId: string): DeprecationInfo {
   const lowercaseModelId = modelId.toLowerCase()
   const provider = getAPIProvider()
+
+  // openai-compat models follow their own deprecation schedule
+  if (provider === 'openai-compat') {
+    return { isDeprecated: false }
+  }
 
   for (const [key, value] of Object.entries(DEPRECATED_MODELS)) {
     const retirementDate = value.retirementDates[provider]
