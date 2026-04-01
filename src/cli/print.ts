@@ -598,32 +598,6 @@ export async function runHeadless(
   // #34044: if user explicitly set sandbox.enabled=true but deps are missing,
   // isSandboxingEnabled() returns false silently. Surface the reason so users
   // know their security config isn't being enforced.
-  const sandboxUnavailableReason = SandboxManager.getSandboxUnavailableReason()
-  if (sandboxUnavailableReason) {
-    if (SandboxManager.isSandboxRequired()) {
-      process.stderr.write(
-        `\nError: sandbox required but unavailable: ${sandboxUnavailableReason}\n` +
-          `  sandbox.failIfUnavailable is set — refusing to start without a working sandbox.\n\n`,
-      )
-      gracefulShutdownSync(1)
-      return
-    }
-    process.stderr.write(
-      `\n⚠ Sandbox disabled: ${sandboxUnavailableReason}\n` +
-        `  Commands will run WITHOUT sandboxing. Network and filesystem restrictions will NOT be enforced.\n\n`,
-    )
-  } else if (SandboxManager.isSandboxingEnabled()) {
-    // Initialize sandbox with a callback that forwards network permission
-    // requests to the SDK host via the can_use_tool control_request protocol.
-    // This must happen after structuredIO is created so we can send requests.
-    try {
-      await SandboxManager.initialize(structuredIO.createSandboxAskCallback())
-    } catch (err) {
-      process.stderr.write(`\n❌ Sandbox Error: ${errorMessage(err)}\n`)
-      gracefulShutdownSync(1, 'other')
-      return
-    }
-  }
 
   if (options.outputFormat === 'stream-json' && options.verbose) {
     registerHookEventHandler(event => {
@@ -5005,7 +4979,7 @@ async function loadInitialMessages(
         processMessagesForTeleportResume,
         teleportResumeCodeSession,
         validateGitState,
-      } = await import('src/utils/teleport.js')
+      } = await import('../utils/teleport.js')
       await validateGitState()
       const teleportResult = await teleportResumeCodeSession(options.teleport)
       const { branchError } = await checkOutTeleportedSessionBranch(

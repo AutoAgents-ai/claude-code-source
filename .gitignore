@@ -1,0 +1,15 @@
+# Environment & secrets
+.env
+.env.*
+
+# Dependencies
+node_modules/
+bun.lockb
+bun.lock
+
+# Build artifacts
+cli.js
+*.tsbuildinfo
+
+# OS
+.DS_Store

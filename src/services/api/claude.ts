@@ -1193,7 +1193,7 @@ async function* queryModel(
       isModelSupportedForCacheEditing,
       getCachedMCConfig,
     } = await import('../compact/cachedMicrocompact.js')
-    const betas = await import('src/constants/betas.js')
+    const betas = await import('../../constants/betas.js')
     cacheEditingBetaHeader = betas.CACHE_EDITING_BETA_HEADER
     const featureEnabled = isCachedMicrocompactEnabled()
     const modelSupported = isModelSupportedForCacheEditing(options.model)

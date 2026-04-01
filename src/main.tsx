@@ -906,11 +906,6 @@ async function run(): Promise<CommanderCommand> {
   // not when displaying help. This avoids the need for env variable signaling.
   program.hook('preAction', async thisCommand => {
     profileCheckpoint('preAction_start');
-    // Await async subprocess loads started at module evaluation (lines 12-20).
-    // Nearly free — subprocesses complete during the ~135ms of imports above.
-    // Must resolve before init() which triggers the first settings read
-    // (applySafeConfigEnvironmentVariables → getSettingsForSource('policySettings')
-    // → isRemoteManagedSettingsEligible → sync keychain reads otherwise ~65ms).
     await Promise.all([ensureMdmSettingsLoaded(), ensureKeychainPrefetchCompleted()]);
     profileCheckpoint('preAction_after_mdm');
     await init();
@@ -934,14 +929,6 @@ async function run(): Promise<CommanderCommand> {
     initSinks();
     profileCheckpoint('preAction_after_sinks');
 
-    // gh-33508: --plugin-dir is a top-level program option. The default
-    // action reads it from its own options destructure, but subcommands
-    // (plugin list, plugin install, mcp *) have their own actions and
-    // never see it. Wire it up here so getInlinePlugins() works everywhere.
-    // thisCommand.opts() is typed {} here because this hook is attached
-    // before .option('--plugin-dir', ...) in the chain — extra-typings
-    // builds the type as options are added. Narrow with a runtime guard;
-    // the collect accumulator + [] default guarantee string[] in practice.
     const pluginDir = thisCommand.getOptionValue('pluginDir');
     if (Array.isArray(pluginDir) && pluginDir.length > 0 && pluginDir.every(p => typeof p === 'string')) {
       setInlinePlugins(pluginDir);
@@ -1478,7 +1465,7 @@ async function run(): Promise<CommanderCommand> {
           const {
             isComputerUseMCPServer,
             COMPUTER_USE_MCP_SERVER_NAME
-          } = await import('src/utils/computerUse/common.js');
+          } = await import('./utils/computerUse/common.js');
           if (nonSdkConfigNames.some(isComputerUseMCPServer)) {
             reservedNameError = `Invalid MCP configuration: "${COMPUTER_USE_MCP_SERVER_NAME}" is a reserved MCP name.`;
           }
@@ -1609,11 +1596,11 @@ async function run(): Promise<CommanderCommand> {
       try {
         const {
           getChicagoEnabled
-        } = await import('src/utils/computerUse/gates.js');
+        } = await import('./utils/computerUse/gates.js');
         if (getChicagoEnabled()) {
           const {
             setupComputerUseMCP
-          } = await import('src/utils/computerUse/setup.js');
+          } = await import('./utils/computerUse/setup.js');
           const {
             mcpConfig,
             allowedTools: cuTools
@@ -1900,7 +1887,6 @@ async function run(): Promise<CommanderCommand> {
       }
     }
 
-    // IMPORTANT: setup() must be called before any other code that depends on the cwd or worktree setup
     profileCheckpoint('action_before_setup');
     logForDebugging('[STARTUP] Running setup()...');
     const setupStart = Date.now();
@@ -1950,18 +1936,6 @@ async function run(): Promise<CommanderCommand> {
       }
     }
     if (getIsNonInteractiveSession()) {
-      // Apply full merged settings env now (including project-scoped
-      // .claude/settings.json PATH/GIT_DIR/GIT_WORK_TREE) so gitExe() and
-      // the git spawn below see it. Trust is implicit in -p mode; the
-      // docstring at managedEnv.ts:96-97 says this applies "potentially
-      // dangerous environment variables such as LD_PRELOAD, PATH" from all
-      // sources. The later call in the isNonInteractiveSession block below
-      // is idempotent (Object.assign, configureGlobalAgents ejects prior
-      // interceptor) and picks up any plugin-contributed env after plugin
-      // init. Project settings are already loaded here:
-      // applySafeConfigEnvironmentVariables in init() called
-      // getSettings_DEPRECATED at managedEnv.ts:86 which merges all enabled
-      // sources including projectSettings/localSettings.
       applyConfigEnvironmentVariables();
 
       // Spawn git status/log/branch now so the subprocess execution overlaps
@@ -2024,8 +1998,6 @@ async function run(): Promise<CommanderCommand> {
     const currentCwd = worktreeEnabled ? getCwd() : preSetupCwd;
     logForDebugging('[STARTUP] Loading commands and agents...');
     const commandsStart = Date.now();
-    // Join the promises kicked before setup() (or start fresh if
-    // worktreeEnabled gated the early kick). Both memoized by cwd.
     const [commands, agentDefinitionsResult] = await Promise.all([commandsPromise ?? getCommands(currentCwd), agentDefsPromise ?? getAgentDefinitionsWithOverrides(currentCwd)]);
     logForDebugging(`[STARTUP] Commands and agents loaded in ${Date.now() - commandsStart}ms`);
     profileCheckpoint('action_commands_loaded');
@@ -2587,9 +2559,6 @@ async function run(): Promise<CommanderCommand> {
         setHasFormattedOutput(true);
       }
 
-      // Apply full environment variables in print mode since trust dialog is bypassed
-      // This includes potentially dangerous environment variables from untrusted sources
-      // but print mode is considered trusted (as documented in help text)
       applyConfigEnvironmentVariables();
 
       // Initialize telemetry after env vars are applied so OTEL endpoint env vars and
@@ -2824,7 +2793,7 @@ async function run(): Promise<CommanderCommand> {
       profileCheckpoint('before_print_import');
       const {
         runHeadless
-      } = await import('src/cli/print.js');
+      } = await import('./cli/print.js');
       profileCheckpoint('after_print_import');
       void runHeadless(inputPrompt, () => headlessStore.getState(), headlessStore.setState, commandsHeadless, tools, sdkMcpConfigs, agentDefinitions.activeAgents, {
         continue: options.continue,
@@ -4362,7 +4331,7 @@ async function run(): Promise<CommanderCommand> {
   program.command('update').alias('upgrade').description('Check for updates and install if available').action(async () => {
     const {
       update
-    } = await import('src/cli/update.js');
+    } = await import('./cli/update.js');
     await update();
   });
 
@@ -4371,7 +4340,7 @@ async function run(): Promise<CommanderCommand> {
     program.command('up').description('[ANT-ONLY] Initialize or upgrade the local dev environment using the "# claude up" section of the nearest CLAUDE.md').action(async () => {
       const {
         up
-      } = await import('src/cli/up.js');
+      } = await import('./cli/up.js');
       await up();
     });
   }
@@ -4386,7 +4355,7 @@ async function run(): Promise<CommanderCommand> {
     }) => {
       const {
         rollback
-      } = await import('src/cli/rollback.js');
+      } = await import('./cli/rollback.js');
       await rollback(target, options);
     });
   }

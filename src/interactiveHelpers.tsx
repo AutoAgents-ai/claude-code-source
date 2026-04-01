@@ -191,7 +191,7 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
   if (await isQualifiedForGrove()) {
     const {
       GroveDialog
-    } = await import('src/components/grove/Grove.js');
+    } = await import('./components/grove/Grove.js');
     const decision = await showSetupDialog<string>(root, done => <GroveDialog showIfAlreadyViewed={false} location={onboardingShown ? 'onboarding' : 'policy_update_modal'} onDone={done} />);
     if (decision === 'escape') {
       logEvent('tengu_grove_policy_exited', {});
