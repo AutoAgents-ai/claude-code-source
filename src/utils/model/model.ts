@@ -347,6 +347,11 @@ export function renderModelSetting(setting: ModelName | ModelAlias): string {
  * if the model is not recognized as a public model.
  */
 export function getPublicModelDisplayName(model: ModelName): string | null {
+  // openai-compat maps all model keys to the same custom model name,
+  // so the switch below would always match the first case (opus46).
+  if (getAPIProvider() === 'openai-compat') {
+    return null
+  }
   switch (model) {
     case getModelStrings().opus46:
       return 'Opus 4.6'
