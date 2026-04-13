@@ -27,7 +27,11 @@
     "typecheck:packages": "tsc --noEmit -p packages/types/tsconfig.json && tsc --noEmit -p packages/core/tsconfig.json",
     "prepublishOnly": "node -e \"if (!process.env.AUTHORIZED) { console.error('ERROR: Direct publishing is not allowed.'); process.exit(1); }\""
   },
-  "dependencies": {},
+  "dependencies": {
+    "@anthropic-ai/cc-types": "workspace:*",
+    "@anthropic-ai/cc-core": "workspace:*",
+    "@anthropic-ai/cc-config": "workspace:*"
+  },
   "devDependencies": {
     "@alcalzone/ansi-tokenize": "*",
     "@anthropic-ai/bedrock-sdk": "*",

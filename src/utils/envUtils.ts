@@ -1,7 +1,10 @@
 import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
 import { join } from 'path'
-import { getGatewayConfig } from 'src/config/gateway.js'
+import { getGatewayConfig, isEnvTruthy, isEnvDefinedFalsy } from '@anthropic-ai/cc-config'
+
+// Re-export from package for backward compatibility
+export { isEnvTruthy, isEnvDefinedFalsy }
 
 // Memoized: 150+ callers, many on hot paths. Keyed off CLAUDE_CONFIG_DIR so
 // tests that change the env var get a fresh value without explicit cache.clear.
@@ -28,23 +31,6 @@ export function hasNodeOption(flag: string): boolean {
     return false
   }
   return nodeOptions.split(/\s+/).includes(flag)
-}
-
-export function isEnvTruthy(envVar: string | boolean | undefined): boolean {
-  if (!envVar) return false
-  if (typeof envVar === 'boolean') return envVar
-  const normalizedValue = envVar.toLowerCase().trim()
-  return ['1', 'true', 'yes', 'on'].includes(normalizedValue)
-}
-
-export function isEnvDefinedFalsy(
-  envVar: string | boolean | undefined,
-): boolean {
-  if (envVar === undefined) return false
-  if (typeof envVar === 'boolean') return !envVar
-  if (!envVar) return false
-  const normalizedValue = envVar.toLowerCase().trim()
-  return ['0', 'false', 'no', 'off'].includes(normalizedValue)
 }
 
 /**
