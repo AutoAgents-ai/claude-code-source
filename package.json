@@ -7,7 +7,7 @@
   ],
   "bin": {
     "claude": "cli.js",
-    "autoagents": "cli.js"
+    "autoagents": "dev.ts"
   },
   "engines": {
     "node": ">=18.0.0"
