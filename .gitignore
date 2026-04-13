@@ -9,6 +9,7 @@ bun.lock
 
 # Build artifacts
 cli.js
+dist/
 *.tsbuildinfo
 
 # OS
