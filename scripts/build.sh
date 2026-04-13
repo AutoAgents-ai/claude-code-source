@@ -17,6 +17,10 @@ BUILD_TIME="${BUILD_TIME:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
 
 echo "Building cli.js (v${VERSION})..."
 
+# Ensure stub packages exist for internal Anthropic deps
+# (feature-gated, dead-code-eliminated, but bun needs resolution)
+node scripts/ensure-stubs.js
+
 bun build src/entrypoints/cli.tsx \
   --outfile cli.js.tmp \
   --target node \

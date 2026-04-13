@@ -1,6 +1,10 @@
 {
   "name": "@anthropic-ai/claude-code",
   "version": "2.1.88",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "bin": {
     "claude": "cli.js",
     "autoagents": "cli.js"
@@ -11,7 +15,7 @@
   "type": "module",
   "author": "Anthropic <support@anthropic.com>",
   "license": "SEE LICENSE IN README.md",
-  "description": "Use Claude, Anthropic's AI assistant, right from your terminal. Claude can understand your codebase, edit files, run terminal commands, and handle entire workflows for you.",
+  "description": "CC Agent Framework — host-agnostic agent loop with pluggable capabilities.",
   "homepage": "https://github.com/anthropics/claude-code",
   "bugs": {
     "url": "https://github.com/anthropics/claude-code/issues"
@@ -19,6 +23,8 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "dev": "set -a && source .env && set +a && bun run src/main.tsx",
+    "typecheck": "tsc --noEmit",
+    "typecheck:packages": "tsc --noEmit -p packages/types/tsconfig.json && tsc --noEmit -p packages/core/tsconfig.json",
     "prepublishOnly": "node -e \"if (!process.env.AUTHORIZED) { console.error('ERROR: Direct publishing is not allowed.'); process.exit(1); }\""
   },
   "dependencies": {},
